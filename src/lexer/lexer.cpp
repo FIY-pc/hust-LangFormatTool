@@ -1,0 +1,177 @@
+#include "lexer.h"
+#include "token.h"
+#include <vector>
+#include <unordered_map>
+#include <stdexcept>
+
+namespace lexer {
+    Lexer::Lexer(FILE *file,bool printToken) : printToken(printToken), file(file), line(1),column(0) {
+        std::cout<<"Lexer initialized."<<std::endl;
+        if (!file) {
+            throw std::runtime_error("Failed to open file");
+        }
+    }
+    Lexer::~Lexer() {
+        if (file) fclose(file);
+    }
+
+    std::vector<Token> Lexer::tokenize() {
+        std::vector<Token> tokens;
+        Token token;
+        do {
+            token = getToken();
+            tokens.push_back(token);
+            if(printToken)
+                token.print();
+        } while (token.kind != TokenKind::EOF_TOKEN && token.kind != TokenKind::ERROR_TOKEN);
+        return tokens;
+    }
+
+    Token Lexer::getToken() {
+        int c;
+        // 跳过空白符并记录行列号
+        while ((c = fgetc(file)) != EOF && std::isspace(c)) {
+            if (c == '\n') {
+                line++;
+                column = 0;
+            } else {
+                column++;
+            }
+        }
+        if (c == EOF) {
+            return makeToken(TokenKind::EOF_TOKEN, "");
+        }
+
+        int start_col = column + 1; // 当前字符是第几个字符
+        std::string text;
+
+        // 标识符或关键字
+        if (std::isalpha(c) || c == '_') {
+            text += c;
+            column++;
+            while ((c = fgetc(file)), (std::isalnum(c) || c == '_')) {
+                text += c;
+                column++;
+            }
+            if (c != EOF) ungetc(c, file);
+
+            // 判断是否为关键字
+
+            auto it = keywords.find(text);
+            if (it != keywords.end()) {
+                return makeToken(it->second, text, start_col);
+            } else {
+                return makeToken(TokenKind::IDENT, text, start_col);
+            }
+        }
+
+        // 整型常量
+        if (std::isdigit(c)) {
+            text += c;
+            column++;
+            bool isFloat = false;
+            while ((c = fgetc(file)), std::isdigit(c) || c == '.') {
+                if (c == '.') {
+                    if (isFloat) break; // 第二个点，非法
+                    isFloat = true;
+                }
+                text += c;
+                column++;
+            }
+            if (c != EOF) ungetc(c, file);
+            if (isFloat)
+                return makeToken(TokenKind::FLOAT_CONST, text, start_col);
+            else
+                return makeToken(TokenKind::INT_CONST, text, start_col);
+        }
+
+        // 字符串常量
+        if (c == '"') {
+            text += c;
+            column++;
+            while ((c = fgetc(file)) != EOF && c != '"') {
+                if (c == '\\') { // 处理转义字符
+                    text += c;
+                    column++;
+                    c = fgetc(file);
+                    if (c == EOF) break;
+                }
+                text += c;
+                column++;
+            }
+            if (c == '"') {
+                text += c;
+                column++;
+                return makeToken(TokenKind::STRING_CONST, text, start_col);
+            } else {
+                return makeToken(TokenKind::ERROR_TOKEN, text, start_col);
+            }
+        }
+
+
+        // 单/多字符运算符、定界符
+        column++;
+        switch (c) {
+            case '=': {
+                int next = fgetc(file);
+                if (next == '=') {
+                    column++;
+                    return makeToken(TokenKind::EQ, "==", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::ASSIGN, "=", start_col);
+                }
+            }
+            case '!': {
+                int next = fgetc(file);
+                if (next == '=') {
+                    column++;
+                    return makeToken(TokenKind::NEQ, "!=", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::ERROR_TOKEN, "!", start_col);
+                }
+            }
+            case '<': {
+                int next = fgetc(file);
+                if (next == '=') {
+                    column++;
+                    return makeToken(TokenKind::LE, "<=", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::LT, "<", start_col);
+                }
+            }
+            case '>': {
+                int next = fgetc(file);
+                if (next == '=') {
+                    column++;
+                    return makeToken(TokenKind::GE, ">=", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::GT, ">", start_col);
+                }
+            }
+            case '+': return makeToken(TokenKind::PLUS, "+", start_col);
+            case '-': return makeToken(TokenKind::MINUS, "-", start_col);
+            case '*': return makeToken(TokenKind::MUL, "*", start_col);
+            case '/': return makeToken(TokenKind::DIV, "/", start_col);
+            case '%': return makeToken(TokenKind::MOD, "%", start_col);
+            case '(': return makeToken(TokenKind::LP, "(", start_col);
+            case ')': return makeToken(TokenKind::RP, ")", start_col);
+            case '[': return makeToken(TokenKind::LB, "[", start_col);
+            case ']': return makeToken(TokenKind::RB, "]", start_col);
+            case '{': return makeToken(TokenKind::LC, "{", start_col);
+            case '}': return makeToken(TokenKind::RC, "}", start_col);
+            case ';': return makeToken(TokenKind::SEMI, ";", start_col);
+            case ',': return makeToken(TokenKind::COMMA, ",", start_col);
+            default:
+                return makeToken(TokenKind::ERROR_TOKEN, std::string(1, c), start_col);
+        }
+    }
+
+    Token Lexer::makeToken(TokenKind kind, const std::string& text, int col) {
+        return Token{kind, text, line, col ? col : column};
+    }
+}
+
