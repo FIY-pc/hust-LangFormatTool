@@ -29,11 +29,25 @@ int main(const int argc, char** argv) {
         auto lexer=lexer::Lexer(file,true);
         lexer.tokenize();
         return 0;
-    });
+    },"Only perform lexical analysis");
+
+    // 调试标志
+    bool debug = false;
+    app.add_flag("-v,--verbose", debug, "Enable debug output");
 
     // 只做语法分析
-    bool parse_only = false;
-    app.add_flag("--parse", parse_only, "Only perform syntax analysis and output AST");
+    app.add_flag_callback("-p,--parse", [&]() {
+        std::cout << "Performing parsing on file: " << filename << std::endl;
+        FILE *file = fopen(filename.c_str(), "r");
+        if (!file) {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        parser::Parser parser(file, debug);
+        auto ast = parser.parse();
+        parser.outputAST("ast.txt");
+        return 0;
+    },"Only perform parsing");
 
     // 只格式化
     bool format_only = false;

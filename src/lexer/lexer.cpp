@@ -47,10 +47,10 @@ namespace lexer {
 
         // 标识符或关键字
         if (std::isalpha(c) || c == '_') {
-            text += c;
+            text += static_cast<char>(c);
             column++;
             while ((c = fgetc(file)), (std::isalnum(c) || c == '_')) {
-                text += c;
+                text += static_cast<char>(c);
                 column++;
             }
             if (c != EOF) ungetc(c, file);
@@ -67,15 +67,15 @@ namespace lexer {
 
         // 整型常量
         if (std::isdigit(c)) {
-            text += c;
+            text += static_cast<char>(c);
             column++;
             bool isFloat = false;
             while ((c = fgetc(file)), std::isdigit(c) || c == '.') {
                 if (c == '.') {
-                    if (isFloat) break; // 第二个点，非法
+                    if (isFloat) break; // 第二个���，非法
                     isFloat = true;
                 }
-                text += c;
+                text += static_cast<char>(c);
                 column++;
             }
             if (c != EOF) ungetc(c, file);
@@ -87,20 +87,20 @@ namespace lexer {
 
         // 字符串常量
         if (c == '"') {
-            text += c;
+            text += static_cast<char>(c);
             column++;
             while ((c = fgetc(file)) != EOF && c != '"') {
                 if (c == '\\') { // 处理转义字符
-                    text += c;
+                    text += static_cast<char>(c);
                     column++;
                     c = fgetc(file);
                     if (c == EOF) break;
                 }
-                text += c;
+                text += static_cast<char>(c);
                 column++;
             }
             if (c == '"') {
-                text += c;
+                text += static_cast<char>(c);
                 column++;
                 return makeToken(TokenKind::STRING_CONST, text, start_col);
             } else {
@@ -129,7 +129,27 @@ namespace lexer {
                     return makeToken(TokenKind::NEQ, "!=", start_col);
                 } else {
                     if (next != EOF) ungetc(next, file);
-                    return makeToken(TokenKind::ERROR_TOKEN, "!", start_col);
+                    return makeToken(TokenKind::NOT, "!", start_col);
+                }
+            }
+            case '&': {
+                int next = fgetc(file);
+                if (next == '&') {
+                    column++;
+                    return makeToken(TokenKind::AND, "&&", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::ERROR_TOKEN, "&", start_col);
+                }
+            }
+            case '|': {
+                int next = fgetc(file);
+                if (next == '|') {
+                    column++;
+                    return makeToken(TokenKind::OR, "||", start_col);
+                } else {
+                    if (next != EOF) ungetc(next, file);
+                    return makeToken(TokenKind::ERROR_TOKEN, "|", start_col);
                 }
             }
             case '<': {
@@ -166,12 +186,11 @@ namespace lexer {
             case ';': return makeToken(TokenKind::SEMI, ";", start_col);
             case ',': return makeToken(TokenKind::COMMA, ",", start_col);
             default:
-                return makeToken(TokenKind::ERROR_TOKEN, std::string(1, c), start_col);
+                return makeToken(TokenKind::ERROR_TOKEN, std::string(1, static_cast<char>(c)), start_col);
         }
     }
 
-    Token Lexer::makeToken(TokenKind kind, const std::string& text, int col) {
+    Token Lexer::makeToken(TokenKind kind, const std::string& text, int col) const {
         return Token{kind, text, line, col ? col : column};
     }
 }
-

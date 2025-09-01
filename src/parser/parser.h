@@ -7,14 +7,27 @@
 namespace parser {
     class Parser {
     public:
-        Parser(FILE *file);
-        Parser(lexer::Lexer &lexer);
+        Parser(FILE *file, bool debug = false);
+        Parser(lexer::Lexer &lexer, bool debug = false);
         ~Parser();
         ASTNode* parse(); // 解析输入的Token序列，返回AST根节点
+        void outputAST(const std::string& filename);
+        bool debug = false;
+        void debugLog(const std::string& funcName, int pos) const {
+            if (!debug) return;
+            if (pos < tokens.size()) {
+                const auto& tk = tokens[pos];
+                std::cout << "[DEBUG] " << funcName << " pos=" << pos << " token=[" << lexer::TokenKindToString(tk.kind) << "] '" << tk.text << "' (line " << tk.line << ", col " << tk.column << ")" << std::endl;
+            } else {
+                std::cout << "[DEBUG] " << funcName << " pos=" << pos << " (end of tokens)" << std::endl;
+            }
+        }
     private:
         lexer::Lexer lexer;
         ASTNode* root;
         std::vector<lexer::Token> tokens;
+        int pos;
+        void error(const std::string& msg) const;
 
         // 顶层结构
         ASTNode* parseProgram();
@@ -23,6 +36,7 @@ namespace parser {
 
         // 变量声明
         ASTNode* parseVarDecl();
+        ASTNode* parseLocalVarDecl();
 
         // 函数声明与定义
         ASTNode* parseFunctionDecl();
@@ -61,7 +75,6 @@ namespace parser {
 
         // 类型说明符
         ASTNode* parseTypeSpec();
-        int pos;
     };
 }
 

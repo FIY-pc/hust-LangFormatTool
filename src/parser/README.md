@@ -19,7 +19,7 @@ external_decl   → function_def
 
 ---
 
-# 2. 变量声明与说明
+# 2. 变量声明
 
 ```
 var_decl        → type_spec IDENT SEMI
@@ -153,7 +153,7 @@ continue_stmt   → CONTINUE SEMI
 
 ---
 
-# 7. 表达式（支持所有运算符）
+# 7. 表达式
 
 ```
 expr            → assign_expr

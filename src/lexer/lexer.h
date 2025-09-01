@@ -17,7 +17,7 @@ namespace lexer {
         int line;
         int column;
         Token getToken();
-        Token makeToken(TokenKind kind, const std::string& text, int col = 0);
+        Token makeToken(TokenKind kind, const std::string& text, int col = 0) const;
     };
 }
 
