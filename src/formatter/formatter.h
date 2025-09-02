@@ -1,11 +1,18 @@
 #ifndef FORMATTER_H
 #define FORMATTER_H
 #include <string>
+#include "parser.h"
 
 namespace formatter {
     class Formatter {
     public:
-        void format(const std::string &input, const std::string &output);
+        explicit Formatter(FILE *input,bool debug=false,std::string output="formatted");
+        ~Formatter();
+        bool debug;
+        std::string output;
+        void format();
+    private:
+        parser::Parser parser;
     };
 }
 

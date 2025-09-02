@@ -8,14 +8,18 @@
 namespace lexer {
     class Lexer {
     public:
-        Lexer(FILE *file,bool printToken=false);
+        explicit Lexer(FILE *file);
         ~Lexer();
-        bool printToken;
         std::vector<Token> tokenize();
+        void printTokensOrder(); // 顺序输出
+        void printTokensSorted(); // 按种类编码排序输出
+        void printTokensOrderPretty(); // 顺序美化输出
+        void printTokensSortedPretty(); // 排序美化输出
     private:
         FILE *file;
         int line;
         int column;
+        std::vector<Token> tokens_cache; // 缓存token列表
         Token getToken();
         Token makeToken(TokenKind kind, const std::string& text, int col = 0) const;
     };

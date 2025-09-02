@@ -7,12 +7,14 @@
 namespace parser {
     class Parser {
     public:
-        Parser(FILE *file, bool debug = false);
-        Parser(lexer::Lexer &lexer, bool debug = false);
+        explicit Parser(FILE *file, bool debug = false,std::string output="ast.txt");
+        explicit Parser(lexer::Lexer &lexer, bool debug = false,std::string output="ast.txt");
         ~Parser();
         ASTNode* parse(); // 解析输入的Token序列，返回AST根节点
-        void outputAST(const std::string& filename);
+        void outputAST(std::string& filename);
         bool debug = false;
+        std::string output;
+        lexer::Lexer lexer;
         void debugLog(const std::string& funcName, int pos) const {
             if (!debug) return;
             if (pos < tokens.size()) {
@@ -23,7 +25,6 @@ namespace parser {
             }
         }
     private:
-        lexer::Lexer lexer;
         ASTNode* root;
         std::vector<lexer::Token> tokens;
         int pos;

@@ -1,14 +1,20 @@
 #include "parser.h"
 #include "lexer.h"
 #include "ast.h"
+#include <utility>
 #include <vector>
 #include <fstream>
 
 namespace parser {
-    Parser::Parser(FILE *file,bool debug):
-        debug(debug), lexer(file), root(nullptr), tokens(lexer.tokenize()),pos(0) {}
-    Parser::Parser(lexer::Lexer &lexer,bool debug):
-        debug(debug), lexer(lexer), root(nullptr), tokens(lexer.tokenize()),pos(0) {}
+    Parser::Parser(FILE *file, const bool debug,std::string output):
+        debug(debug),output(std::move(output)), lexer(file), root(nullptr), tokens(lexer.tokenize()),pos(0)
+    {
+        if(this->output.empty()){
+            this->output="ast.txt";
+        }
+    }
+    Parser::Parser(lexer::Lexer &lexer, const bool debug,std::string output):
+        debug(debug),output(std::move(output)), lexer(lexer), root(nullptr), tokens(lexer.tokenize()),pos(0) {}
     Parser::~Parser() {
         lexer.~Lexer();
         if (root) root->~ASTNode();

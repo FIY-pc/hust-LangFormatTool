@@ -3,10 +3,10 @@
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <algorithm>
 
 namespace lexer {
-    Lexer::Lexer(FILE *file,bool printToken) : printToken(printToken), file(file), line(1),column(0) {
-        std::cout<<"Lexer initialized."<<std::endl;
+    Lexer::Lexer(FILE *file) : file(file), line(1),column(0) {
         if (!file) {
             throw std::runtime_error("Failed to open file");
         }
@@ -16,15 +16,49 @@ namespace lexer {
     }
 
     std::vector<Token> Lexer::tokenize() {
-        std::vector<Token> tokens;
+        tokens_cache.clear();
         Token token;
         do {
             token = getToken();
-            tokens.push_back(token);
-            if(printToken)
-                token.print();
+            tokens_cache.push_back(token);
         } while (token.kind != TokenKind::EOF_TOKEN && token.kind != TokenKind::ERROR_TOKEN);
-        return tokens;
+        return tokens_cache;
+    }
+
+    void Lexer::printTokensOrder() {
+        if (tokens_cache.empty()) tokenize();
+        for (const auto& token : tokens_cache) {
+            token.print();
+        }
+    }
+
+    void Lexer::printTokensSorted() {
+        if (tokens_cache.empty()) tokenize();
+        std::vector<Token> sorted_tokens = tokens_cache;
+        std::sort(sorted_tokens.begin(), sorted_tokens.end(), [](const Token& a, const Token& b) {
+            return static_cast<int>(a.kind) < static_cast<int>(b.kind);
+        });
+        for (const auto& token : sorted_tokens) {
+            token.print();
+        }
+    }
+
+    void Lexer::printTokensOrderPretty() {
+        if (tokens_cache.empty()) tokenize();
+        for (const auto& token : tokens_cache) {
+            std::cout << "Token(" << TokenKindToString(token.kind) << ", \"" << token.text << "\", " << token.line << ", " << token.column << ")\n";
+        }
+    }
+
+    void Lexer::printTokensSortedPretty() {
+        if (tokens_cache.empty()) tokenize();
+        std::vector<Token> sorted_tokens = tokens_cache;
+        std::sort(sorted_tokens.begin(), sorted_tokens.end(), [](const Token& a, const Token& b) {
+            return static_cast<int>(a.kind) < static_cast<int>(b.kind);
+        });
+        for (const auto& token : sorted_tokens) {
+            std::cout << "Token(" << TokenKindToString(token.kind) << ", \"" << token.text << "\", " << token.line << ", " << token.column << ")\n";
+        }
     }
 
     Token Lexer::getToken() {

@@ -354,7 +354,10 @@ namespace parser {
         }
     }
 
-    void Parser::outputAST(const std::string& filename) {
+    void Parser::outputAST(std::string& filename) {
+        if (filename.empty()) {
+            filename=output;
+        }
         std::ofstream out(filename);
         if (!out.is_open()) {
             std::cerr << "Cannot open output file: " << filename << std::endl;
