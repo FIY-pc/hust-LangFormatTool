@@ -122,7 +122,7 @@ namespace parser {
         return nullptr; // ε
     }
 
-    // 单个参数：type_spec IDENT
+    // 单个参数：type_spec IDENT [LB INT_CONST/IDENT RB ...]
     ASTNode *Parser::parseParam() {
         debugLog("parseParam", pos);
         int backup = pos;
@@ -138,9 +138,34 @@ namespace parser {
         auto* identNode = new ASTNode{NodeType::Identifier};
         identNode->token = tokens[pos].text;
         pos++;
+        // 数组类型参数
+        ASTNode* arrayTypeNode = nullptr;
+        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+            arrayTypeNode = new ASTNode{NodeType::ArrayType};
+            while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+                pos++;
+                if (pos < tokens.size() && (tokens[pos].kind == lexer::TokenKind::INT_CONST || tokens[pos].kind == lexer::TokenKind::IDENT)) {
+                    auto* dimNode = new ASTNode{getTypeFromTokenKind(tokens[pos].kind)};
+                    dimNode->token = tokens[pos].text;
+                    arrayTypeNode->children.push_back(dimNode);
+                    pos++;
+                } else {
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                pos++;
+            }
+        }
         auto* node = new ASTNode{NodeType::Param};
         node->children.push_back(typeNode);
         node->children.push_back(identNode);
+        if (arrayTypeNode) node->children.push_back(arrayTypeNode);
         debugLog("parseParam_exit", pos);
         return node;
     }

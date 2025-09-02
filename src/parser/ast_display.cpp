@@ -10,6 +10,16 @@ namespace parser {
         for (int i = 0; i < indent; ++i) out << "    ";
     }
 
+    // 递归输出数组类型维度
+    static void outputArrayType(std::ofstream& out, ASTNode* arrayTypeNode) {
+        if (!arrayTypeNode || arrayTypeNode->type != NodeType::ArrayType) return;
+        out << "数组维度: ";
+        for (auto* dim : arrayTypeNode->children) {
+            out << "[" << dim->token << "]";
+        }
+        out << "\n";
+    }
+
     // 递归输出AST
     static void outputASTNode(std::ofstream& out, ASTNode* node, int indent = 0) {
         if (!node) return;
@@ -29,11 +39,17 @@ namespace parser {
                     printIndent(out, indent + 2);
                     out << "ID: " << node->children[1]->token << "\n";
                 }
+                // 数组类型
+                if (node->children.size() > 2 && node->children[2]->type == NodeType::ArrayType) {
+                    printIndent(out, indent + 1);
+                    outputArrayType(out, node->children[2]);
+                }
                 // 初始化表达式
-                if (node->children.size() > 2) {
+                int initIdx = node->children.size() - 1;
+                if (node->children.size() > 2 && node->children[initIdx]->type != NodeType::ArrayType) {
                     printIndent(out, indent + 1);
                     out << "初始化表达式:\n";
-                    outputASTNode(out, node->children[2], indent + 2);
+                    outputASTNode(out, node->children[initIdx], indent + 2);
                 }
                 break;
             }
@@ -52,11 +68,37 @@ namespace parser {
                     printIndent(out, indent + 2);
                     out << "ID: " << node->children[1]->token << "\n";
                 }
+                // 数组类型
+                if (node->children.size() > 2 && node->children[2]->type == NodeType::ArrayType) {
+                    printIndent(out, indent + 1);
+                    outputArrayType(out, node->children[2]);
+                }
                 // 初始化表达式
-                if (node->children.size() > 2) {
+                int initIdx = node->children.size() - 1;
+                if (node->children.size() > 2 && node->children[initIdx]->type != NodeType::ArrayType) {
                     printIndent(out, indent + 1);
                     out << "初始化表达式:\n";
-                    outputASTNode(out, node->children[2], indent + 2);
+                    outputASTNode(out, node->children[initIdx], indent + 2);
+                }
+                break;
+            }
+            case NodeType::Param: {
+                printIndent(out, indent);
+                out << "参数:\n";
+                // 类型
+                if (!node->children.empty() && node->children[0]->type == NodeType::TypeSpec) {
+                    printIndent(out, indent + 1);
+                    out << "类型: " << node->children[0]->token << "\n";
+                }
+                // 参数名
+                if (node->children.size() > 1 && node->children[1]->type == NodeType::Identifier) {
+                    printIndent(out, indent + 1);
+                    out << "参数名: " << node->children[1]->token << "\n";
+                }
+                // 数组类型
+                if (node->children.size() > 2 && node->children[2]->type == NodeType::ArrayType) {
+                    printIndent(out, indent + 1);
+                    outputArrayType(out, node->children[2]);
                 }
                 break;
             }
@@ -78,10 +120,7 @@ namespace parser {
                     printIndent(out, indent + 1);
                     out << "函数参数:\n";
                     for (auto* param : node->children[2]->children) {
-                        if (param->type == NodeType::Param) {
-                            printIndent(out, indent + 2);
-                            out << "类型: " << param->children[0]->token << ", 参数名: " << param->children[1]->token << "\n";
-                        }
+                        outputASTNode(out, param, indent + 2);
                     }
                 }
                 // 复合语句
@@ -110,10 +149,7 @@ namespace parser {
                     printIndent(out, indent + 1);
                     out << "函数参数:\n";
                     for (auto* param : node->children[2]->children) {
-                        if (param->type == NodeType::Param) {
-                            printIndent(out, indent + 2);
-                            out << "类型: " << param->children[0]->token << ", 参数名: " << param->children[1]->token << "\n";
-                        }
+                        outputASTNode(out, param, indent + 2);
                     }
                 }
                 break;
@@ -349,6 +385,21 @@ namespace parser {
             case NodeType::ContinueStmt: {
                 printIndent(out, indent);
                 out << "CONTINUE语句\n";
+                break;
+            }
+            case NodeType::ArrayAccess: {
+                printIndent(out, indent);
+                out << "数组访问:\n";
+                if (!node->children.empty()) {
+                    printIndent(out, indent + 1);
+                    out << "被访问对象:\n";
+                    outputASTNode(out, node->children[0], indent + 2);
+                }
+                if (node->children.size() > 1) {
+                    printIndent(out, indent + 1);
+                    out << "下标:\n";
+                    outputASTNode(out, node->children[1], indent + 2);
+                }
                 break;
             }
             default:

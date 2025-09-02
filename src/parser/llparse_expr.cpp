@@ -202,7 +202,7 @@ namespace parser {
         return parsePostfixExpr();
     }
 
-    // postfix_expr → primary_expr | IDENT LP arg_list RP
+    // postfix_expr → primary_expr | IDENT LP arg_list RP | postfix_expr LB expr RB
     ASTNode* Parser::parsePostfixExpr() {
         debugLog("parsePostfixExpr", pos);
         int backup = pos;
@@ -231,9 +231,35 @@ namespace parser {
                 pos = identPos; // 不是函数调用，回溯
             }
         }
-        // 否则为 primary_expr
-        pos = backup;
-        return parsePrimaryExpr();
+        // 数组访问：postfix_expr LB expr RB
+        ASTNode* base = nullptr;
+        int arrBackup = pos;
+        base = parsePrimaryExpr();
+        if (!base) {
+            pos = backup;
+            return nullptr;
+        }
+        while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+            pos++;
+            ASTNode* indexExpr = parseExpr();
+            if (!indexExpr) {
+                error("array_access: expected expression inside []");
+                pos = arrBackup;
+                return nullptr;
+            }
+            if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
+                error("array_access: expected ']' after expression");
+                pos = arrBackup;
+                return nullptr;
+            }
+            pos++;
+            auto* arrNode = new ASTNode{NodeType::ArrayAccess};
+            arrNode->children.push_back(base);
+            arrNode->children.push_back(indexExpr);
+            base = arrNode;
+        }
+        debugLog("parsePostfixExpr_exit", pos);
+        return base;
     }
 
     // arg_list → expr { COMMA expr } | ε

@@ -26,14 +26,40 @@ namespace parser {
             pos = backup;
             return nullptr;
         }
-        // 创建 VarDecl 节点
-        auto* varNode = new ASTNode{NodeType::VarDecl};
-        varNode->children.push_back(typeNode);
         // 标识符节点
         auto* identNode = new ASTNode{NodeType::Identifier};
         identNode->token = tokens[pos].text;
-        varNode->children.push_back(identNode);
         pos++;
+        // 检查是否为数组声明
+        ASTNode* arrayTypeNode = nullptr;
+        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+            arrayTypeNode = new ASTNode{NodeType::ArrayType};
+            while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+                pos++;
+                if (pos < tokens.size() && (tokens[pos].kind == lexer::TokenKind::INT_CONST || tokens[pos].kind == lexer::TokenKind::IDENT)) {
+                    auto* dimNode = new ASTNode{getTypeFromTokenKind(tokens[pos].kind)};
+                    dimNode->token = tokens[pos].text;
+                    arrayTypeNode->children.push_back(dimNode);
+                    pos++;
+                } else {
+                    error("array_decl: expected dimension inside []");
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
+                    error("array_decl: expected ']' after dimension");
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                pos++;
+            }
+        }
+        auto* varNode = new ASTNode{NodeType::VarDecl};
+        varNode->children.push_back(typeNode);
+        varNode->children.push_back(identNode);
+        if (arrayTypeNode) varNode->children.push_back(arrayTypeNode);
         // 检查是否有赋值
         if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::ASSIGN) {
             pos++;
@@ -78,12 +104,37 @@ namespace parser {
             pos = backup;
             return nullptr;
         }
-        auto* varNode = new ASTNode{NodeType::LocalVarDecl};
-        varNode->children.push_back(typeNode);
         auto* identNode = new ASTNode{NodeType::Identifier};
         identNode->token = tokens[pos].text;
-        varNode->children.push_back(identNode);
         pos++;
+        // 检查是否为数组声明
+        ASTNode* arrayTypeNode = nullptr;
+        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+            arrayTypeNode = new ASTNode{NodeType::ArrayType};
+            while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+                pos++;
+                if (pos < tokens.size() && (tokens[pos].kind == lexer::TokenKind::INT_CONST || tokens[pos].kind == lexer::TokenKind::IDENT)) {
+                    auto* dimNode = new ASTNode{getTypeFromTokenKind(tokens[pos].kind)};
+                    dimNode->token = tokens[pos].text;
+                    arrayTypeNode->children.push_back(dimNode);
+                    pos++;
+                } else {
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
+                    delete arrayTypeNode;
+                    pos = backup;
+                    return nullptr;
+                }
+                pos++;
+            }
+        }
+        auto* varNode = new ASTNode{NodeType::LocalVarDecl};
+        varNode->children.push_back(typeNode);
+        varNode->children.push_back(identNode);
+        if (arrayTypeNode) varNode->children.push_back(arrayTypeNode);
         if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::ASSIGN) {
             pos++;
             ASTNode* exprNode = parseExpr();
