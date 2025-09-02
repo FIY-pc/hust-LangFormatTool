@@ -277,6 +277,11 @@ namespace parser {
                 out << "INT_CONST: " << node->token << "\n";
                 break;
             }
+            case NodeType::LongConst: {
+                printIndent(out, indent);
+                out << "LONG_CONST: " << node->token << "\n";
+                break;
+            }
             case NodeType::FloatConst: {
                 printIndent(out, indent);
                 out << "FLOAT_CONST: " << node->token << "\n";

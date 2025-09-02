@@ -99,22 +99,59 @@ namespace lexer {
             }
         }
 
-        // 整型常量
+        // 整型常量和long整型常量，支持十进制、十六进制、八进制
         if (std::isdigit(c)) {
             text += static_cast<char>(c);
             column++;
-            bool isFloat = false;
-            while ((c = fgetc(file)), std::isdigit(c) || c == '.') {
-                if (c == '.') {
-                    if (isFloat) break; // 第二个���，非法
-                    isFloat = true;
+            bool isHex = false, isOct = false, isFloat = false;
+            int base = 10;
+            int firstChar = c;
+            c = fgetc(file);
+            if (firstChar == '0') {
+                if (c == 'x' || c == 'X') {
+                    text += static_cast<char>(c);
+                    column++;
+                    isHex = true;
+                    base = 16;
+                    // 读取十六进制数字
+                    while ((c = fgetc(file)), std::isxdigit(c)) {
+                        text += static_cast<char>(c);
+                        column++;
+                    }
+                } else if (std::isdigit(c)) {
+                    isOct = true;
+                    base = 8;
+                    // 读取八进制数字
+                    while (std::isdigit(c)) {
+                        text += static_cast<char>(c);
+                        column++;
+                        c = fgetc(file);
+                    }
                 }
+            }
+            if (!isHex && !isOct) {
+                // 十进制或浮点
+                while (std::isdigit(c) || c == '.') {
+                    if (c == '.') {
+                        if (isFloat) break; // 第二个点，非法
+                        isFloat = true;
+                    }
+                    text += static_cast<char>(c);
+                    column++;
+                    c = fgetc(file);
+                }
+            }
+            // 检查是否为long整型常量（如123L）
+            if (c == 'L' || c == 'l') {
                 text += static_cast<char>(c);
                 column++;
+                return makeToken(TokenKind::LONG_CONST, text, start_col);
             }
             if (c != EOF) ungetc(c, file);
             if (isFloat)
                 return makeToken(TokenKind::FLOAT_CONST, text, start_col);
+            else if (isHex || isOct)
+                return makeToken(TokenKind::INT_CONST, text, start_col); // 统一为INT_CONST
             else
                 return makeToken(TokenKind::INT_CONST, text, start_col);
         }

@@ -10,10 +10,7 @@ namespace parser {
         debugLog("parseVarDecl", pos);
         // 只有类型关键字才尝试变量声明，否则直接返回nullptr
         if (pos >= tokens.size() ||
-            (tokens[pos].kind != lexer::TokenKind::INT &&
-             tokens[pos].kind != lexer::TokenKind::FLOAT &&
-             tokens[pos].kind != lexer::TokenKind::CHAR &&
-             tokens[pos].kind != lexer::TokenKind::VOID)) {
+            !lexer::isTypeSpecifier(tokens[pos].kind)) {
             return nullptr;
         }
         int backup = pos;
@@ -68,10 +65,7 @@ namespace parser {
     ASTNode *Parser::parseLocalVarDecl() {
         debugLog("parseLocalVarDecl", pos);
         if (pos >= tokens.size() ||
-            (tokens[pos].kind != lexer::TokenKind::INT &&
-             tokens[pos].kind != lexer::TokenKind::FLOAT &&
-             tokens[pos].kind != lexer::TokenKind::CHAR &&
-             tokens[pos].kind != lexer::TokenKind::VOID)) {
+            !lexer::isTypeSpecifier(tokens[pos].kind)) {
             return nullptr;
         }
         int backup = pos;

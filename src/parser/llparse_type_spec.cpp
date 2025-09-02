@@ -9,8 +9,7 @@ namespace parser {
             return nullptr;
         }
         auto kind = tokens[pos].kind;
-        if (kind == lexer::TokenKind::INT || kind == lexer::TokenKind::FLOAT ||
-            kind == lexer::TokenKind::CHAR || kind == lexer::TokenKind::VOID) {
+        if (lexer::isTypeSpecifier(kind)) {
             auto* node = new ASTNode{NodeType::TypeSpec};
             node->token = tokens[pos].text;
             pos++;

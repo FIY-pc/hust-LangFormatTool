@@ -258,37 +258,20 @@ namespace parser {
         return node;
     }
 
-    // primary_expr → IDENT | INT_CONST | FLOAT_CONST | CHAR_CONST | STRING_CONST | LP expr RP
+    // primary_expr → IDENT | LONG_CONST | INT_CONST | FLOAT_CONST | CHAR_CONST | STRING_CONST | LP expr RP
     ASTNode* Parser::parsePrimaryExpr() {
         debugLog("parsePrimaryExpr", pos);
         if (pos >= tokens.size()) return nullptr;
         auto kind = tokens[pos].kind;
+        auto nodeType = getTypeFromTokenKind(kind);
         if (kind == lexer::TokenKind::IDENT) {
             auto* node = new ASTNode{NodeType::Identifier};
             node->token = tokens[pos].text;
             pos++;
             debugLog("parsePrimaryExpr_exit", pos);
             return node;
-        } else if (kind == lexer::TokenKind::INT_CONST) {
-            auto* node = new ASTNode{NodeType::IntConst};
-            node->token = tokens[pos].text;
-            pos++;
-            debugLog("parsePrimaryExpr_exit", pos);
-            return node;
-        } else if (kind == lexer::TokenKind::FLOAT_CONST) {
-            auto* node = new ASTNode{NodeType::FloatConst};
-            node->token = tokens[pos].text;
-            pos++;
-            debugLog("parsePrimaryExpr_exit", pos);
-            return node;
-        } else if (kind == lexer::TokenKind::CHAR_CONST) {
-            auto* node = new ASTNode{NodeType::CharConst};
-            node->token = tokens[pos].text;
-            pos++;
-            debugLog("parsePrimaryExpr_exit", pos);
-            return node;
-        } else if (kind == lexer::TokenKind::STRING_CONST) {
-            auto* node = new ASTNode{NodeType::StringConst};
+        } else if (isTerminalNode(nodeType)) {
+            auto* node = new ASTNode{nodeType};
             node->token = tokens[pos].text;
             pos++;
             debugLog("parsePrimaryExpr_exit", pos);

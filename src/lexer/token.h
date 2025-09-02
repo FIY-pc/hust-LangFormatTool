@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <iostream>
+#include <unordered_set>
 
 namespace lexer {
     enum class TokenKind {
@@ -12,6 +13,7 @@ namespace lexer {
         // 标识符与常量
         IDENT,          // 标识符
         INT_CONST,      // 整型常量
+        LONG_CONST,     // long整型常量
         FLOAT_CONST,    // 浮点常量
         CHAR_CONST,     // 字符常量
         STRING_CONST,   // 字符串常量
@@ -20,6 +22,7 @@ namespace lexer {
         INT,            // int
         FLOAT,          // float
         CHAR,           // char
+        LONG,           // long
         IF,             // if
         ELSE,           // else
         WHILE,          // while
@@ -42,6 +45,7 @@ namespace lexer {
         MUL,            // *
         DIV,            // /
         MOD,            // %
+
         // 逻辑运算符
         AND,            // &&
         OR,             // ||
@@ -57,6 +61,16 @@ namespace lexer {
         SEMI,           // ;
         COMMA,          // ,
     };
+    static std::unordered_set<TokenKind> TypeSpecifiers = {
+        TokenKind::INT,
+        TokenKind::FLOAT,
+        TokenKind::CHAR,
+        TokenKind::LONG,
+        TokenKind::VOID
+    };
+    inline bool isTypeSpecifier(TokenKind kind) {
+        return TypeSpecifiers.find(kind) != TypeSpecifiers.end();
+    }
     static std::unordered_map<int, std::string> TokenKindToStringMap = {
         {static_cast<int>(TokenKind::ERROR_TOKEN), "ERROR_TOKEN"},
         {static_cast<int>(TokenKind::EOF_TOKEN), "EOF_TOKEN"},
@@ -69,7 +83,8 @@ namespace lexer {
         {static_cast<int>(TokenKind::INT), "INT"},
         {static_cast<int>(TokenKind::FLOAT), "FLOAT"},
         {static_cast<int>(TokenKind::CHAR), "CHAR"},
-           {static_cast<int>(TokenKind::VOID), "VOID"},
+        {static_cast<int>(TokenKind::LONG), "LONG"},
+        {static_cast<int>(TokenKind::VOID), "VOID"},
 
         {static_cast<int>(TokenKind::IF), "IF"},
         {static_cast<int>(TokenKind::ELSE), "ELSE"},
@@ -117,12 +132,16 @@ namespace lexer {
         {"int", TokenKind::INT},
         {"float", TokenKind::FLOAT},
         {"char", TokenKind::CHAR},
+        {"long", TokenKind::LONG},
+        {"void", TokenKind::VOID},
+        {"long", TokenKind::LONG},
+
         {"if", TokenKind::IF},
         {"else", TokenKind::ELSE},
         {"while", TokenKind::WHILE},
         {"for", TokenKind::FOR},
         {"return", TokenKind::RETURN},
-        {"void", TokenKind::VOID},
+
         {"continue", TokenKind::CONTINUE},
         {"break", TokenKind::BREAK},
     };
