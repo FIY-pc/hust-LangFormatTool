@@ -29,12 +29,14 @@ int main(const int argc, char** argv) {
     bool parse_mode = false;
     bool format_mode = false;
     bool pretty = false;
+    bool cn = false;
     app.add_flag("-l,--lex", lex_mode, "Only perform lexical analysis");
     app.add_flag("-p,--parse", parse_mode, "Only perform parsing");
     app.add_flag("-F,--format", format_mode, "Only perform formatting");
     app.add_flag("--lex-order", lex_order, "Print tokens in order");
     app.add_flag("--lex-sort", lex_sort, "Print tokens sorted by kind");
     app.add_flag("-P,--pretty", pretty, "Pretty print output");
+    app.add_flag("--cn", cn, "Print token kinds in Chinese");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -46,7 +48,13 @@ int main(const int argc, char** argv) {
             exit(EXIT_FAILURE);
         }
         lexer::Lexer lexer(file);
-        if (pretty) {
+        if (cn) {
+            if (lex_sort) {
+                lexer.printTokensSortedCN();
+            } else {
+                lexer.printTokensOrderCN();
+            }
+        } else if (pretty) {
             if (lex_sort) {
                 lexer.printTokensSortedPretty();
             } else {

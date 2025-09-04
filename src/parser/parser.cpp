@@ -1,6 +1,7 @@
 #include "parser.h"
 #include "lexer.h"
 #include "ast.h"
+#include "token_translater.h"
 #include <utility>
 #include <vector>
 #include <fstream>

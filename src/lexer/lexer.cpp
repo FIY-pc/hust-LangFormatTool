@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "token.h"
+#include "token_translater.h"
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
@@ -58,6 +59,24 @@ namespace lexer {
         });
         for (const auto& token : sorted_tokens) {
             std::cout << "Token(" << TokenKindToString(token.kind) << ", \"" << token.text << "\", " << token.line << ", " << token.column << ")\n";
+        }
+    }
+
+    void Lexer::printTokensOrderCN() {
+        if (tokens_cache.empty()) tokenize();
+        for (const auto& token : tokens_cache) {
+            std::cout << "Token(" << TokenKindToCNString(token.kind) << ", \"" << token.text << "\", " << token.line << ", " << token.column << ")\n";
+        }
+    }
+
+    void Lexer::printTokensSortedCN() {
+        if (tokens_cache.empty()) tokenize();
+        std::vector<Token> sorted_tokens = tokens_cache;
+        std::sort(sorted_tokens.begin(), sorted_tokens.end(), [](const Token& a, const Token& b) {
+            return static_cast<int>(a.kind) < static_cast<int>(b.kind);
+        });
+        for (const auto& token : sorted_tokens) {
+            std::cout << "Token(" << TokenKindToCNString(token.kind) << ", \"" << token.text << "\", " << token.line << ", " << token.column << ")\n";
         }
     }
 

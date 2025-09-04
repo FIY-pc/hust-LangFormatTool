@@ -3,6 +3,7 @@
 #include "lexer.h"
 #include "ast.h"
 #include "token.h"
+#include "token_translater.h"
 
 namespace parser {
     class Parser {

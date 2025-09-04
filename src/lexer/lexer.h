@@ -15,6 +15,8 @@ namespace lexer {
         void printTokensSorted(); // 按种类编码排序输出
         void printTokensOrderPretty(); // 顺序美化输出
         void printTokensSortedPretty(); // 排序美化输出
+        void printTokensOrderCN(); // 顺序中文输出
+        void printTokensSortedCN(); // 排序中文输出
     private:
         FILE *file;
         int line;

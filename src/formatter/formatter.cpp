@@ -31,47 +31,7 @@ namespace formatter {
         {"GE", ">="}
     };
 
-    static const std::unordered_map<parser::NodeType, std::string> nodeTypeToString = {
-        {parser::NodeType::Program, "Program"},
-        {parser::NodeType::ExternalDeclList, "ExternalDeclList"},
-        {parser::NodeType::FunctionDef, "FunctionDef"},
-        {parser::NodeType::FunctionDecl, "FunctionDecl"},
-        {parser::NodeType::VarDecl, "VarDecl"},
-        {parser::NodeType::LocalVarDecl, "LocalVarDecl"},
-        {parser::NodeType::ParamList, "ParamList"},
-        {parser::NodeType::Param, "Param"},
-        {parser::NodeType::CompoundStmt, "CompoundStmt"},
-        {parser::NodeType::StmtList, "StmtList"},
-        {parser::NodeType::ExprStmt, "ExprStmt"},
-        {parser::NodeType::IfStmt, "IfStmt"},
-        {parser::NodeType::WhileStmt, "WhileStmt"},
-        {parser::NodeType::ForStmt, "ForStmt"},
-        {parser::NodeType::ReturnStmt, "ReturnStmt"},
-        {parser::NodeType::BreakStmt, "BreakStmt"},
-        {parser::NodeType::ContinueStmt, "ContinueStmt"},
-        {parser::NodeType::AssignExpr, "AssignExpr"},
-        {parser::NodeType::LogicalOrExpr, "LogicalOrExpr"},
-        {parser::NodeType::LogicalAndExpr, "LogicalAndExpr"},
-        {parser::NodeType::EqualityExpr, "EqualityExpr"},
-        {parser::NodeType::RelationalExpr, "RelationalExpr"},
-        {parser::NodeType::AdditiveExpr, "AdditiveExpr"},
-        {parser::NodeType::MultiplicativeExpr, "MultiplicativeExpr"},
-        {parser::NodeType::UnaryExpr, "UnaryExpr"},
-        {parser::NodeType::PostfixExpr, "PostfixExpr"},
-        {parser::NodeType::ArgList, "ArgList"},
-        {parser::NodeType::PrimaryExpr, "PrimaryExpr"},
-        {parser::NodeType::TypeSpec, "TypeSpec"},
-        {parser::NodeType::ArrayType, "ArrayType"},
-        {parser::NodeType::ArrayAccess, "ArrayAccess"},
-        {parser::NodeType::Identifier, "Identifier"},
-        {parser::NodeType::LongConst, "LongConst"},
-        {parser::NodeType::IntConst, "IntConst"},
-        {parser::NodeType::FloatConst, "FloatConst"},
-        {parser::NodeType::CharConst, "CharConst"},
-        {parser::NodeType::StringConst, "StringConst"}
-    };
-
-    // 辅助函数，递归输出表达式但不加分号和换行（用于for头部）
+    // 辅助函数，递归输出表达式但不加分号和换行（主要用于for头部）
     void Formatter::formatExprNoSemi(FILE* out, parser::ASTNode* node) {
         if (!node) return;
         using NT = parser::NodeType;
@@ -194,8 +154,11 @@ namespace formatter {
                 formatASTNode(out, node->children[0], 0); // type
                 fprintf(out, " ");
                 formatASTNode(out, node->children[1], 0); // ident
-                if (node->children.size() > 2) {
-                    formatASTNode(out, node->children[2], 0); // arrayType
+                // 无论有无第三个子节点，只要是数组类型都输出
+                for (size_t i = 2; i < node->children.size(); ++i) {
+                    if (node->children[i] && node->children[i]->type == NT::ArrayType) {
+                        formatASTNode(out, node->children[i], 0); // arrayType
+                    }
                 }
                 break;
             }
