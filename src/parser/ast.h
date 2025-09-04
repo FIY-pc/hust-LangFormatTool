@@ -47,13 +47,16 @@ namespace parser {
         TypeSpec,           // 类型说明符
         ArrayType,          // 数组类型说明符
         ArrayAccess,        // 数组访问表达式
+        ParenthesizedExpr,    // 括号表达式
         // 终结符
         Identifier,         // 标识符
         LongConst,          // 长整型常量
         IntConst,           // 整型常量
         FloatConst,         // 浮点型常量
         CharConst,          // 字符型常量
-        StringConst         // 字符串常量
+        StringConst,        // 字符串常量
+        LineComment,         // 行注释
+        BlockComment        // 块注释
     };
 
     static std::unordered_set<NodeType> terminalNodes = {

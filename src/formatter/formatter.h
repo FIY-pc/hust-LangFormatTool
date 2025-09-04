@@ -11,6 +11,8 @@ namespace formatter {
         bool debug;
         std::string output;
         void format();
+        void formatASTNode(FILE* out,  parser::ASTNode* node, int indent = 0);
+        void formatExprNoSemi(FILE* out, parser::ASTNode* node);
     private:
         parser::Parser parser;
     };

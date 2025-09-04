@@ -48,12 +48,22 @@ namespace parser {
     // 解析外部声明
     ASTNode *Parser::parseExternalDecl() {
         debugLog("parseExternalDecl", pos);
-        // 遇到EOF_TOKEN，说明文件结束，直接返回nullptr
+        // 遇到EOF_TOKEN，说明文件结束
         if (pos >= tokens.size() || tokens[pos].kind == lexer::TokenKind::EOF_TOKEN) {
             return nullptr;
         }
         int backup = pos;
         ASTNode* node = nullptr;
+
+        // 顶层注释
+        if (pos < tokens.size() &&
+            (tokens[pos].kind == lexer::TokenKind::LINE_COMMENT || tokens[pos].kind == lexer::TokenKind::BLOCK_COMMENT)) {
+            auto kind = tokens[pos].kind;
+            auto* node = new ASTNode{kind == lexer::TokenKind::LINE_COMMENT ? LineComment : BlockComment};
+            node->token = tokens[pos].text;
+            pos++;
+            return node;
+        }
 
         node = parseFunctionDef();
         if (node) { debugLog("parseExternalDecl_funcdef", pos); return node; }

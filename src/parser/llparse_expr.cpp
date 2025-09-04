@@ -314,8 +314,11 @@ namespace parser {
                 return nullptr;
             }
             pos++;
+            // 生成 ParenthesizedExpr 节点
+            auto* node = new ASTNode{NodeType::ParenthesizedExpr};
+            node->children.push_back(expr);
             debugLog("parsePrimaryExpr_exit", pos);
-            return expr;
+            return node;
         }
         return nullptr;
     }

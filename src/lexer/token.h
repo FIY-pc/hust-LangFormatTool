@@ -60,6 +60,10 @@ namespace lexer {
         RC,             // }
         SEMI,           // ;
         COMMA,          // ,
+
+        // 注释
+        LINE_COMMENT,    // 行注释 //
+        BLOCK_COMMENT,   // 块注释 /**/
     };
     static std::unordered_set<TokenKind> TypeSpecifiers = {
         TokenKind::INT,
@@ -122,6 +126,9 @@ namespace lexer {
 
         {static_cast<int>(TokenKind::SEMI), "SEMI"},
         {static_cast<int>(TokenKind::COMMA), "COMMA"},
+
+        {static_cast<int>(TokenKind::LINE_COMMENT), "LINE_COMMENT"},
+        {static_cast<int>(TokenKind::BLOCK_COMMENT), "BLOCK_COMMENT"},
     };
 
     inline std::string TokenKindToString(TokenKind kind) {

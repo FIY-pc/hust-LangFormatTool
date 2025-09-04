@@ -24,6 +24,10 @@ namespace parser {
         }
         pos++;
         ASTNode* paramListNode = parseParamList();
+        // 无参数时插入空ParamList节点
+        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::RP) {
+            if (!paramListNode) paramListNode = new ASTNode{NodeType::ParamList};
+        }
         if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RP) {
             pos = backup;
             return nullptr;
@@ -64,6 +68,10 @@ namespace parser {
         }
         pos++;
         ASTNode* paramListNode = parseParamList();
+        // 无参数时插入空ParamList节点
+        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::RP) {
+            if (!paramListNode) paramListNode = new ASTNode{NodeType::ParamList};
+        }
         if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RP) {
             pos = backup;
             return nullptr;
@@ -122,7 +130,7 @@ namespace parser {
         return nullptr; // ε
     }
 
-    // 单个参数：type_spec IDENT [LB INT_CONST/IDENT RB ...]
+    // 单个参数：type_spec IDENT [LB [INT_CONST/IDENT] RB ...]
     ASTNode *Parser::parseParam() {
         debugLog("parseParam", pos);
         int backup = pos;
@@ -138,29 +146,25 @@ namespace parser {
         auto* identNode = new ASTNode{NodeType::Identifier};
         identNode->token = tokens[pos].text;
         pos++;
-        // 数组类型参数
+        // 数组类型参数，允许无维度
         ASTNode* arrayTypeNode = nullptr;
-        if (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
-            arrayTypeNode = new ASTNode{NodeType::ArrayType};
-            while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
-                pos++;
-                if (pos < tokens.size() && (tokens[pos].kind == lexer::TokenKind::INT_CONST || tokens[pos].kind == lexer::TokenKind::IDENT)) {
-                    auto* dimNode = new ASTNode{getTypeFromTokenKind(tokens[pos].kind)};
-                    dimNode->token = tokens[pos].text;
-                    arrayTypeNode->children.push_back(dimNode);
-                    pos++;
-                } else {
-                    delete arrayTypeNode;
-                    pos = backup;
-                    return nullptr;
-                }
-                if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
-                    delete arrayTypeNode;
-                    pos = backup;
-                    return nullptr;
-                }
+        while (pos < tokens.size() && tokens[pos].kind == lexer::TokenKind::LB) {
+            if (!arrayTypeNode) arrayTypeNode = new ASTNode{NodeType::ArrayType};
+            pos++;
+            // 支持无维度（即直接遇到 RB）
+            if (pos < tokens.size() && (tokens[pos].kind == lexer::TokenKind::INT_CONST || tokens[pos].kind == lexer::TokenKind::IDENT)) {
+                auto* dimNode = new ASTNode{getTypeFromTokenKind(tokens[pos].kind)};
+                dimNode->token = tokens[pos].text;
+                arrayTypeNode->children.push_back(dimNode);
                 pos++;
             }
+            // 必须有右括号
+            if (pos >= tokens.size() || tokens[pos].kind != lexer::TokenKind::RB) {
+                delete arrayTypeNode;
+                pos = backup;
+                return nullptr;
+            }
+            pos++;
         }
         auto* node = new ASTNode{NodeType::Param};
         node->children.push_back(typeNode);

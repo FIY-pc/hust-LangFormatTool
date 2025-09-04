@@ -179,6 +179,55 @@ namespace lexer {
             }
         }
 
+        // 注释处理
+        if (c == '/') {
+            int next = fgetc(file);
+            if (next == '/') {
+                // 行注释 //
+                text = "//";
+                column += 2;
+                while ((c = fgetc(file)) != EOF && c != '\n') {
+                    text += static_cast<char>(c);
+                    column++;
+                }
+                if (c == '\n') {
+                    line++;
+                    column = 0;
+                }
+                return makeToken(TokenKind::LINE_COMMENT, text, start_col);
+            } else if (next == '*') {
+                // 块注释 /**/
+                text = "/*";
+                column += 2;
+                bool endFound = false;
+                while ((c = fgetc(file)) != EOF) {
+                    text += static_cast<char>(c);
+                    column++;
+                    if (c == '*') {
+                        int peek = fgetc(file);
+                        if (peek == '/') {
+                            text += '/';
+                            column++;
+                            endFound = true;
+                            break;
+                        } else if (peek != EOF) {
+                            ungetc(peek, file);
+                        }
+                    }
+                    if (c == '\n') {
+                        line++;
+                        column = 0;
+                    }
+                }
+                if (!endFound) {
+                    return makeToken(TokenKind::ERROR_TOKEN, text, start_col);
+                }
+                return makeToken(TokenKind::BLOCK_COMMENT, text, start_col);
+            } else {
+                if (next != EOF) ungetc(next, file);
+                return makeToken(TokenKind::DIV, "/", start_col);
+            }
+        }
 
         // 单/多字符运算符、定界符
         column++;

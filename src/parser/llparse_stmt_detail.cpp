@@ -34,6 +34,16 @@ namespace parser {
         node = parseExprStmt();
         if (node) { debugLog("parseStmt_exit", pos); return node; }
         pos = backup;
+        // 注释语句
+        if (pos < tokens.size() &&
+            (tokens[pos].kind == lexer::TokenKind::LINE_COMMENT || tokens[pos].kind == lexer::TokenKind::BLOCK_COMMENT)) {
+            auto kind = tokens[pos].kind;
+            auto* node = new ASTNode{kind == lexer::TokenKind::LINE_COMMENT ? LineComment : BlockComment};
+            node->token = tokens[pos].text;
+            pos++;
+            debugLog("parseStmt_exit", pos);
+            return node;
+        }
         debugLog("parseStmt_exit", pos);
         return nullptr;
     }

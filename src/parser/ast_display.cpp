@@ -95,10 +95,12 @@ namespace parser {
                     printIndent(out, indent + 1);
                     out << "参数名: " << node->children[1]->token << "\n";
                 }
-                // 数组类型
-                if (node->children.size() > 2 && node->children[2]->type == NodeType::ArrayType) {
-                    printIndent(out, indent + 1);
-                    outputArrayType(out, node->children[2]);
+                // 数组类型（递归显示所有维度）
+                for (size_t i = 2; i < node->children.size(); ++i) {
+                    if (node->children[i]->type == NodeType::ArrayType) {
+                        printIndent(out, indent + 1);
+                        outputArrayType(out, node->children[i]);
+                    }
                 }
                 break;
             }
@@ -400,6 +402,24 @@ namespace parser {
                     out << "下标:\n";
                     outputASTNode(out, node->children[1], indent + 2);
                 }
+                break;
+            }
+            case NodeType::ParenthesizedExpr: {
+                printIndent(out, indent);
+                out << "括号表达式:\n";
+                for (auto* child : node->children) {
+                    outputASTNode(out, child, indent + 1);
+                }
+                break;
+            }
+            case NodeType::LineComment: {
+                printIndent(out, indent);
+                out << node->token << "\n";
+                break;
+            }
+            case NodeType::BlockComment: {
+                printIndent(out, indent);
+                out << node->token << "\n";
                 break;
             }
             default:

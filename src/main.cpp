@@ -87,19 +87,9 @@ int main(const int argc, char** argv) {
         }
         parser.parse();
         parser.outputAST(output);
+        std::cout << "AST output to file: " << output << std::endl;
         return 0;
     } else if (format_mode) {
-        std::cout << "Formatting file: " << filename << " to " << output << std::endl;
-        FILE *file = fopen(filename.c_str(), "r");
-        if (!file) {
-            std::cerr << "Failed to open file: " << filename << std::endl;
-            exit(EXIT_FAILURE);
-        }
-        formatter::Formatter formatter(file, debug, output);
-        formatter.format();
-        return 0;
-    } else {
-        // 默认执行格式化
         if (output.empty()) {
             output = "formatted_" + filename;
         }
@@ -111,6 +101,22 @@ int main(const int argc, char** argv) {
         }
         formatter::Formatter formatter(file, debug, output);
         formatter.format();
+        std::cout << "Formatted output to file: " << output << std::endl;
+        return 0;
+    } else {
+        // 默认执行格式化
+        if (output.empty()) {
+            output = "formatted_output.c";
+        }
+        std::cout << "Formatting file: " << filename << " to " << output << std::endl;
+        FILE *file = fopen(filename.c_str(), "r");
+        if (!file) {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        formatter::Formatter formatter(file, debug, output);
+        formatter.format();
+        std::cout << "Formatted output to file: " << output << std::endl;
         return 0;
     }
 }
